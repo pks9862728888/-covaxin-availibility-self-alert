@@ -91,9 +91,9 @@ public class VaccinationCenterData {
         return "VaccinationCenterData {" +
                 "\n\tname = '" + name + '\'' +
                 ",\n\tdate = '" + date + '\'' +
-                ",\n\tfirstDoseAvailability = '" + firstDoseAvailability + '\'' +
-                ",\n\tsecondDoseAvailability = '" + secondDoseAvailability + '\'' +
-                ",\n\tminAgeLimit = " + minAgeLimit +
+                ",\n\tfirst_dose_availability = '" + firstDoseAvailability + '\'' +
+                ",\n\tsecond_dose_availability = '" + secondDoseAvailability + '\'' +
+                ",\n\tmin_age_limit = " + minAgeLimit +
                 ",\n\tvaccine = '" + vaccine + '\'' +
                 ",\n\tslots = '" + slots + '\'' +
                 "\n}";
