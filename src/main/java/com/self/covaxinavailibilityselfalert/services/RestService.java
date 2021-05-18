@@ -1,7 +1,6 @@
 package com.self.covaxinavailibilityselfalert.services;
 
 import com.self.covaxinavailibilityselfalert.exceptions.FetchAppointmentsException;
-import com.self.covaxinavailibilityselfalert.models.SessionData;
 import io.restassured.response.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
