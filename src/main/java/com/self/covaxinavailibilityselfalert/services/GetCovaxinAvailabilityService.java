@@ -4,7 +4,7 @@ import com.self.covaxinavailibilityselfalert.enumerations.AgeTrackingType;
 import com.self.covaxinavailibilityselfalert.enumerations.DoseTrackingType;
 import com.self.covaxinavailibilityselfalert.enumerations.VaccineTrackingType;
 import com.self.covaxinavailibilityselfalert.exceptions.FetchAppointmentsException;
-import com.self.covaxinavailibilityselfalert.models.SessionData;
+import com.self.covaxinavailibilityselfalert.models.VaccinationCenterData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONException;
@@ -31,18 +31,22 @@ public class GetCovaxinAvailabilityService {
     @Value("${vaccine.tracking-type}")
     private String vaccineTrackingType;
 
-    @Autowired
     private RestService restService;
 
-    public List<SessionData> getVaccineAvailability(int districtCode, Date date) throws FetchAppointmentsException, JSONException {
+    @Autowired
+    public GetCovaxinAvailabilityService(RestService restService) {
+        this.restService = restService;
+    }
+
+    public List<VaccinationCenterData> getVaccineAvailability(String districtCode, Date date) throws FetchAppointmentsException, JSONException {
         String formattedDate = new SimpleDateFormat("dd-MM-yyyy").format(date);
         String url = GET_VACCINE_AVAILABILITY_BY_DISTRICT_URL + String.format("?district_id=%s&date=%s", districtCode, formattedDate);
         List data = this.restService.getSessionsAsString(url);
-        List<SessionData> sessionDataList = new ArrayList<>();
+        List<VaccinationCenterData> vaccinationCenterDataList = new ArrayList<>();
 
         if (data.size() > 0) {
-            for (int i = 0; i < data.size(); i++) {
-                Map dataObj = (Map) data.get(i);
+            for (Object dataMap : data) {
+                Map dataObj = (Map) dataMap;
 
                 // Check vaccine type
                 if (!(vaccineTrackingType.equals(VaccineTrackingType.BOTH.getName()) || ((String) dataObj.get("vaccine")).equals(vaccineTrackingType))) {
@@ -80,15 +84,45 @@ public class GetCovaxinAvailabilityService {
                 }
 
                 // Prepare data since all conditions satisfied
-                sessionDataList.add(new SessionData(
+                // Preparing data for availability of doses
+                String firstDoseAvailability = "";
+                String secondDoseAvailability = "";
+                Integer capacityDose1 = (Integer) dataObj.get("available_capacity_dose1");
+                if (capacityDose1.equals(0)) {
+                    firstDoseAvailability = "None";
+                } else {
+                    firstDoseAvailability = String.format("Available (%s)", capacityDose1);
+                }
+                Integer capacityDose2 = (Integer) dataObj.get("available_capacity_dose2");
+                if (capacityDose2.equals(0)) {
+                    secondDoseAvailability = "None";
+                } else {
+                    secondDoseAvailability = String.format("Available (%s)", capacityDose2);
+                }
+
+                vaccinationCenterDataList.add(new VaccinationCenterData(
                         (String) dataObj.get("name"),
                         (Integer) dataObj.get("pincode"),
                         (String) dataObj.get("date"),
                         (Integer) dataObj.get("min_age_limit"),
-                        (String) dataObj.get("vaccine")
+                        (String) dataObj.get("vaccine"),
+                        firstDoseAvailability,
+                        secondDoseAvailability,
+                        getFormattedSlots((List) dataObj.get("slots"))
                 ));
             }
         }
-        return sessionDataList;
+        return vaccinationCenterDataList;
+    }
+
+    private String getFormattedSlots(List<String> slots) {
+        if (slots.size() == 0) {
+            return "[]";
+        }
+        StringBuilder str = new StringBuilder().append("[\n");
+        for (String s: slots) {
+            str.append("\t\t").append(s).append(",\n");
+        }
+        return str.append("\t]").toString();
     }
 }

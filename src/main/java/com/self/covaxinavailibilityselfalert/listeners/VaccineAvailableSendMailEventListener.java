@@ -2,7 +2,7 @@ package com.self.covaxinavailibilityselfalert.listeners;
 
 import com.self.covaxinavailibilityselfalert.events.VaccineAvailableSendMailEvent;
 import com.self.covaxinavailibilityselfalert.models.MailSubscribers;
-import com.self.covaxinavailibilityselfalert.models.SessionData;
+import com.self.covaxinavailibilityselfalert.models.VaccinationCenterData;
 import com.self.covaxinavailibilityselfalert.repositories.MailSubscribersRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,14 +41,14 @@ public class VaccineAvailableSendMailEventListener implements ApplicationListene
 
         // Preparing message body
         String subject = "Vaccine Available!";
-        String message = String.format("Hi there,\n\nVaccines are available in following locations:\n\n%s\nThanking you,\n\nYours faithfully,\nCowin Vaccine Tracker Team",
-                formattedMessage(vaccineAvailableSendMailEvent.getSessionDataList()));
+        String message = getFormattedMessageBody(vaccineAvailableSendMailEvent.getNewSessionAvailabilityDataList(), vaccineAvailableSendMailEvent.getOldSessionAvailabilityDataList());
 
         // Creating mail
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setSentDate(new Date());
         simpleMailMessage.setSubject(subject);
         simpleMailMessage.setFrom(fromEmail);
+        simpleMailMessage.setReplyTo(fromEmail);
         simpleMailMessage.setText(message);
 
         // Adding recipient list
@@ -65,11 +65,36 @@ public class VaccineAvailableSendMailEventListener implements ApplicationListene
         LOGGER.info("Mail sent!");
     }
 
-    private String formattedMessage(List<SessionData> sessionDataList) {
+    private String getFormattedMessageBody(List<VaccinationCenterData> newSessionAvailabilityDataList, List<VaccinationCenterData> oldSessionAvailabilityDataList) {
+        String header = "Hi there,";
+        String newVaccineAvailabilityBody = "Vaccines are available in following new locations:";
+        String oldVaccineAvailabilityBody = "Vaccines are also available in the following previously mailed locations:";
+        String footer = "Thanking you,\n\nYours faithfully,\nVaccine Tracker Team\n";
+        StringBuilder stringBuilder = new StringBuilder()
+                .append(header)
+                .append("\n\n")
+                .append(newVaccineAvailabilityBody)
+                .append("\n\n")
+                .append(formattedMessage(newSessionAvailabilityDataList));
+
+        if (oldSessionAvailabilityDataList.size() > 0) {
+            stringBuilder
+                    .append("\n\n")
+                    .append(oldVaccineAvailabilityBody)
+                    .append("\n\n")
+                    .append(formattedMessage(oldSessionAvailabilityDataList));
+        }
+
+        return  stringBuilder
+                .append(footer)
+                .toString();
+    }
+
+    private String formattedMessage(List<VaccinationCenterData> vaccinationCenterDataList) {
         StringBuilder formattedLocationData = new StringBuilder();
 
-        for (SessionData sessionData : sessionDataList) {
-            formattedLocationData.append(sessionData).append("\n\n");
+        for (VaccinationCenterData vaccinationCenterData : vaccinationCenterDataList) {
+            formattedLocationData.append(vaccinationCenterData).append("\n\n");
         }
 
         return formattedLocationData.toString();

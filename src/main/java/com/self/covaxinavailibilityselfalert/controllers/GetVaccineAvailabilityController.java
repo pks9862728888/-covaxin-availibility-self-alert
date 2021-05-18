@@ -1,7 +1,7 @@
 package com.self.covaxinavailibilityselfalert.controllers;
 
 import com.self.covaxinavailibilityselfalert.exceptions.FetchAppointmentsException;
-import com.self.covaxinavailibilityselfalert.models.SessionData;
+import com.self.covaxinavailibilityselfalert.models.VaccinationCenterData;
 import com.self.covaxinavailibilityselfalert.services.GetCovaxinAvailabilityService;
 import com.self.covaxinavailibilityselfalert.services.SendMailService;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.List;
 public class GetVaccineAvailabilityController {
 
     @Value("${district.code}")
-    private int districtCode;
+    private String districtCode;
 
     @Value("${days-to-track}")
     private int daysToTrack;
@@ -47,22 +47,22 @@ public class GetVaccineAvailabilityController {
 
     public void getVaccineSchedule() {
         while (true) {
-            List<SessionData> sessionData = new ArrayList<>();
+            List<VaccinationCenterData> vaccinationCenterData = new ArrayList<>();
 
             // Fetching data for n number of days
             for (int dayCount = 1; dayCount <= daysToTrack; dayCount++) {
                 try {
-                    sessionData.addAll(availabilityData.getVaccineAvailability(districtCode, new Date(System.currentTimeMillis() + dayCount * 24 * 60 * 60 * 1000)));
+                    vaccinationCenterData.addAll(availabilityData.getVaccineAvailability(districtCode, new Date(System.currentTimeMillis() + dayCount * 24 * 60 * 60 * 1000)));
                 } catch (FetchAppointmentsException | JSONException e) {
                     e.printStackTrace();
                 }
             }
 
-            LOGGER.info("Fetching one sweep data complete: " + sessionData);
+            LOGGER.info("Fetching one sweep data complete: " + ((vaccinationCenterData.size() > 0) ? "Vaccine available! " + vaccinationCenterData : "No vaccine available at the moment :("));
 
             // If vaccines are available then send mail if not sent before
-            if (sessionData.size() > 0) {
-                sendMailService.sendMailIfNotSentBefore(sessionData);
+            if (vaccinationCenterData.size() > 0) {
+                sendMailService.sendMailIfNotSentBefore(vaccinationCenterData, districtCode);
             }
 
             // Sleep for n minutes after one sweep
