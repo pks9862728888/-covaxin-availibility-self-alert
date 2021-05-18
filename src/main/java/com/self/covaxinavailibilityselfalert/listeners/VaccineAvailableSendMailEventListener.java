@@ -69,7 +69,7 @@ public class VaccineAvailableSendMailEventListener implements ApplicationListene
         String header = "Hi there,";
         String newVaccineAvailabilityBody = "Vaccines are available in following new locations:";
         String oldVaccineAvailabilityBody = "Vaccines are also available in the following previously mailed locations:";
-        String footer = "Thanking you,\n\nYours faithfully,\nVaccine Tracker Team\n";
+        String footer = "Thanking you,\n\nYours respectfully,\nVaccine Tracker Team\n";
         StringBuilder stringBuilder = new StringBuilder()
                 .append(header)
                 .append("\n\n")
